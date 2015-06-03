@@ -152,11 +152,8 @@ class JupyterApp(Application):
         """
         self.log.debug("Searching %s for config files", self.config_file_paths)
         base_config = 'jupyter_config'
-        self.log.debug("Attempting to load config file: %s" %
-                       base_config)
         try:
-            Application.load_config_file(
-                self,
+            super(JupyterApp, self).load_config_file(
                 base_config,
                 path=self.config_file_paths
             )
@@ -165,25 +162,22 @@ class JupyterApp(Application):
             self.log.debug("Config file %s not found", base_config)
             pass
         
-        for config_file_name in self.config_files:
-            if not config_file_name or config_file_name == base_config:
-                continue
-            self.log.debug("Attempting to load config file: %s" %
-                           self.config_file)
-            try:
-                Application.load_config_file(
-                    self,
-                    config_file_name,
-                    path=self.config_file_paths
-                )
-            except ConfigFileNotFound:
-                self.log.debug("Config file not found, skipping: %s", config_file_name)
-            except Exception:
-                # For testing purposes.
-                if not suppress_errors:
-                    raise
-                self.log.warn("Error loading config file: %s" %
-                              self.config_file, exc_info=True)
+        if not self.config_file_name or self.config_file_name == base_config:
+            return
+        try:
+            super(JupyterApp, self).load_config_file(
+                self.config_file_name,
+                path=self.config_file_paths
+            )
+        except ConfigFileNotFound:
+            self.log.debug("Config file not found, skipping: %s", self.config_file_name)
+        except Exception:
+            # For testing purposes.
+            if not suppress_errors:
+                raise
+            self.log.warn("Error loading config file: %s" %
+                              self.config_file_name, exc_info=True)
+
     # subcommand-related
     def _find_subcommand(self, name):
         name = '{}-{}'.format(self.name, name)
