@@ -161,22 +161,23 @@ class JupyterApp(Application):
             # ignore errors loading parent
             self.log.debug("Config file %s not found", base_config)
             pass
-        
-        if not self.config_file_name or self.config_file_name == base_config:
-            return
-        try:
-            super(JupyterApp, self).load_config_file(
-                self.config_file_name,
-                path=self.config_file_paths
-            )
-        except ConfigFileNotFound:
-            self.log.debug("Config file not found, skipping: %s", self.config_file_name)
-        except Exception:
-            # For testing purposes.
-            if not suppress_errors:
-                raise
-            self.log.warn("Error loading config file: %s" %
-                              self.config_file_name, exc_info=True)
+        from itertools import chain
+        for config_file_name in chain(self.config_file_name, self.config_files):
+            if not config_file_name or config_file_name == base_config:
+                continue
+            try:
+                super(JupyterApp, self).load_config_file(
+                    config_file_name,
+                    path=self.config_file_paths
+                )
+            except ConfigFileNotFound:
+                self.log.debug("Config file not found, skipping: %s", config_file_name)
+            except Exception:
+                # For testing purposes.
+                if not suppress_errors:
+                    raise
+                self.log.warn("Error loading config file: %s" %
+                                config_file_name, exc_info=True)
 
     # subcommand-related
     def _find_subcommand(self, name):
