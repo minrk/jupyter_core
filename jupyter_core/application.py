@@ -19,7 +19,7 @@ try:
     # py3
     from shutil import which
 except ImportError:
-    from .utils.shutil_which import which
+    from backports.shutil_which import which
 
 try:
     raw_input

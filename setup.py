@@ -81,6 +81,7 @@ setuptools_args = {}
 
 setuptools_args['install_requires'] = [
     'traitlets',
+    'backports.shutil_which',
 ]
 
 setuptools_args['entry_points'] = {
