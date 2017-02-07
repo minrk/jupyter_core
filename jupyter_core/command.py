@@ -185,7 +185,11 @@ def main():
     try:
         _execvp(command, sys.argv[1:])
     except OSError as e:
-        sys.exit("Error executing Jupyter command %r: %s" % (subcommand, e))
+        if e.errno == errno.ENOENT:
+            msg = "jupyter: %r is not a jupyter command" % subcommand
+        else:
+            msg = "Error executing `jupyter %s`: %s" % (subcommand, e)
+        sys.exit(msg)
 
 
 if __name__ == '__main__':
