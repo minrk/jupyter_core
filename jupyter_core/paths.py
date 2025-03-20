@@ -202,10 +202,22 @@ def jupyter_runtime_dir() -> str:
     return pjoin(jupyter_data_dir(), "runtime")
 
 
+# %PROGRAMDATA% is not safe by default, require opt-in to trust it
+_use_programdata: bool = envset("JUPYTER_USE_PROGRAMDATA")
+# _win_programdata is a path str if we're using it, None otherwise
+_win_programdata: str | None = None
+if os.name == "nt" and _use_programdata:
+    _win_programdata = os.environ.get("PROGRAMDATA", None)
+
+
 if use_platform_dirs():
-    SYSTEM_JUPYTER_PATH = platformdirs.site_data_dir(
-        APPNAME, appauthor=False, multipath=True
-    ).split(os.pathsep)
+    if os.name == "nt" and not _use_programdata:
+        # default PROGRAMDATA used by site_* is not safe by default on Windows
+        SYSTEM_JUPYTER_PATH = [str(Path(sys.prefix, "share", "jupyter"))]
+    else:
+        SYSTEM_JUPYTER_PATH = platformdirs.site_data_dir(
+            APPNAME, appauthor=False, multipath=True
+        ).split(os.pathsep)
 else:
     deprecation(
         "Jupyter is migrating its paths to use standard platformdirs\n"
@@ -215,10 +227,10 @@ else:
         "The use of platformdirs will be the default in `jupyter_core` v6"
     )
     if os.name == "nt":
-        programdata = os.environ.get("PROGRAMDATA", None)
-        if programdata:
-            SYSTEM_JUPYTER_PATH = [pjoin(programdata, "jupyter")]
-        else:  # PROGRAMDATA is not defined by default on XP.
+        # PROGRAMDATA is not defined by default on XP, and not safe by default
+        if _win_programdata:
+            SYSTEM_JUPYTER_PATH = [pjoin(_win_programdata, "jupyter")]
+        else:
             SYSTEM_JUPYTER_PATH = [str(Path(sys.prefix, "share", "jupyter"))]
     else:
         SYSTEM_JUPYTER_PATH = [
@@ -289,14 +301,18 @@ def jupyter_path(*subdirs: str) -> list[str]:
 
 
 if use_platform_dirs():
-    SYSTEM_CONFIG_PATH = platformdirs.site_config_dir(
-        APPNAME, appauthor=False, multipath=True
-    ).split(os.pathsep)
+    if os.name == "nt" and not _use_programdata:
+        # default PROGRAMDATA is not safe by default on Windows
+        SYSTEM_CONFIG_PATH = []
+    else:
+        SYSTEM_CONFIG_PATH = platformdirs.site_config_dir(
+            APPNAME, appauthor=False, multipath=True
+        ).split(os.pathsep)
 elif os.name == "nt":
-    programdata = os.environ.get("PROGRAMDATA", None)
-    if programdata:
-        SYSTEM_CONFIG_PATH = [str(Path(programdata, "jupyter"))]
-    else:  # PROGRAMDATA is not defined by default on XP.
+    # PROGRAMDATA is not defined by default on XP, and not safe by default
+    if _win_programdata:
+        SYSTEM_CONFIG_PATH = [str(Path(_win_programdata, "jupyter"))]
+    else:
         SYSTEM_CONFIG_PATH = []
 else:
     SYSTEM_CONFIG_PATH = [
