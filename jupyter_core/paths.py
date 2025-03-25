@@ -290,7 +290,13 @@ def jupyter_path(*subdirs: str) -> list[str]:
             if userdir not in user:
                 user.append(userdir)
 
-    env = [p for p in ENV_JUPYTER_PATH if p not in SYSTEM_JUPYTER_PATH]
+    # Windows usually doesn't have a 'system' prefix,
+    # so 'system' and 'env' are the same
+    # make sure that env can still be preferred in this case
+    if ENV_JUPYTER_PATH == SYSTEM_JUPYTER_PATH:
+        env = ENV_JUPYTER_PATH
+    else:
+        env = [p for p in ENV_JUPYTER_PATH if p not in SYSTEM_JUPYTER_PATH]
 
     if prefer_environment_over_user():
         paths.extend(env)
@@ -299,8 +305,10 @@ def jupyter_path(*subdirs: str) -> list[str]:
         paths.extend(user)
         paths.extend(env)
 
-    # finally, system
-    paths.extend(SYSTEM_JUPYTER_PATH)
+    # finally, add system paths (can overlap with env, so avoid duplicates)
+    for _path in SYSTEM_JUPYTER_PATH:
+        if _path not in paths:
+            paths.append(_path)
 
     # add subdir, if requested
     if subdirs:
