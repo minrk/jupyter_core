@@ -260,8 +260,17 @@ def jupyter_path(*subdirs: str) -> list[str]:
     If the Python site.ENABLE_USER_SITE variable is True, we also add the
     appropriate Python user site subdirectory to the user-level directories.
 
+    Finally, system-wide directories, such as `/usr/local/share/jupyter` are searched.
 
     If ``*subdirs`` are given, that subdirectory will be added to each element.
+
+
+    .. versionchanged:: 5.8
+
+        On Windows, %PROGRAMDATA% will be used as a system-wide path only if
+        the JUPYTER_USE_PROGRAMDATA env is set.
+        By default, there is no default system-wide path on Windows and the env path
+        is used instead.
 
     Examples:
 
@@ -347,6 +356,21 @@ def jupyter_config_path() -> list[str]:
 
     If the Python site.ENABLE_USER_SITE variable is True, we also add the
     appropriate Python user site subdirectory to the user-level directories.
+
+    Finally, system-wide directories such as `/usr/local/etc/jupyter` are searched.
+
+
+    .. versionchanged:: 5.8
+
+        On Windows, %PROGRAMDATA% will be used as a system-wide path only if
+        the JUPYTER_USE_PROGRAMDATA env is set.
+        By default, there is no system-wide config path on Windows.
+
+    Examples:
+
+    >>> jupyter_config_path()
+    ['~/.jupyter', '~/.local/etc/jupyter', '/usr/local/etc/jupyter', '/etc/jupyter']
+
     """
     if os.environ.get("JUPYTER_NO_CONFIG"):
         # jupyter_config_dir makes a blank config when JUPYTER_NO_CONFIG is set.
