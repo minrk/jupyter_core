@@ -250,12 +250,24 @@ ENV_JUPYTER_PATH: list[str] = [str(Path(sys.prefix, "share", "jupyter"))]
 
 
 def jupyter_path(*subdirs: str) -> list[str]:
-    """Return a list of directories to search for data files
+    """Return a list of directories to search for data files.
 
-    JUPYTER_PATH environment variable has highest priority.
+    There are four sources of paths to search:
+
+    - $JUPYTER_PATH environment variable (always highest priority)
+    - user directories (e.g. ~/.local/share/jupyter)
+    - environment directories (e.g. {sys.prefix}/share/jupyter)
+    - system-wide paths (e.g. /usr/local/share/jupyter)
+
+    JUPYTER_PATH environment variable has highest priority, if defined,
+    and is purely additive.
 
     If the JUPYTER_PREFER_ENV_PATH environment variable is set, the environment-level
     directories will have priority over user-level directories.
+    You can also set JUPYTER_PREFER_ENV_PATH=0 to explicitly prefer user directories.
+    If Jupyter detects that you are in a virtualenv or conda environment,
+    environment paths are also preferred to user paths,
+    otherwise user paths are preferred to environment paths.
 
     If the Python site.ENABLE_USER_SITE variable is True, we also add the
     appropriate Python user site subdirectory to the user-level directories.
